@@ -92,6 +92,10 @@ class FrontendBackendHost(project: Project) : ProtocolSubscribedProjectComponent
         GodotProjectDiscoverer.getInstance(project).godotMonoPath.adviseNotNull(projectComponentLifetime){
             model.godotPath.set(it)
         }
+
+        GodotProjectDiscoverer.getInstance(project).godotCorePath.adviseNotNull(projectComponentLifetime){
+            model.godotPath.set(it)
+        }
     }
 
     companion object {
