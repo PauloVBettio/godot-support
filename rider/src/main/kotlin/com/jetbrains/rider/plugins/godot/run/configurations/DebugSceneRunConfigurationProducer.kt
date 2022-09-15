@@ -27,7 +27,7 @@ class DebugSceneRunConfigurationProducer : LazyRunConfigurationProducer<GodotDeb
         val file = getContainingFile(context) ?: return false
         val resPath = extractResPath(context) ?: return false
 
-        val path = GodotProjectDiscoverer.getInstance(context.project).godotPath.value
+        val path = GodotProjectDiscoverer.getInstance(context.project).godotMonoPath.value
         if (path == null || !File(path).exists()) {
             return false
         }
