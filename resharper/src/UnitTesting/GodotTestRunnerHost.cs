@@ -27,7 +27,7 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
         [NotNull] public new static readonly ITestRunnerHost Instance = new GodotTestRunnerHost();
         private int myDebugPort;
         private const string pluginDirectory = "RiderTestRunner";
-        private const string runnerScene = "Runner.tscn";
+        private const string runnerScene = "NetCoreRunner.tscn";
 
         public override IPreparedProcess StartProcess(ProcessStartInfo startInfo, ITestRunnerContext context)
         {
@@ -36,7 +36,7 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
             var scenePaths = solutionDirectory.GetChildDirectories(pluginDirectory,
                 PathSearchFlags.ExcludeFiles | PathSearchFlags.RecurseIntoSubdirectories).Select(a=>a.Combine(runnerScene)).Where(a => a.ExistsFile).ToArray();
             if (!scenePaths.Any())
-                throw new Exception("Please manually put folder with files from https://github.com/van800/godot-demo-projects/tree/nunit/mono/dodge_the_creeps/RiderTestRunner to your project.");
+                throw new Exception("Please manually put folder with files from https://github.com/van800/godot-demo-projects/blob/net6/mono/dodge_the_creeps/RiderTestRunner to your project.");
             if (scenePaths.Length > 1)
                 throw new Exception($"Make sure you have only 1 {pluginDirectory}/{runnerScene} in your project.");
 
