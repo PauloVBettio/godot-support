@@ -95,6 +95,7 @@ class FrontendBackendHost(project: Project) : ProtocolSubscribedProjectComponent
 
         GodotProjectDiscoverer.getInstance(project).godotCorePath.adviseNotNull(projectComponentLifetime){
             model.godotPath.set(it)
+            model.isNet6Plus.set(true)
         }
     }
 

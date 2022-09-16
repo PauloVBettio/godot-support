@@ -39,17 +39,19 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
                 throw new Exception("Please manually put folder with files from https://github.com/van800/godot-demo-projects/tree/nunit/mono/dodge_the_creeps/RiderTestRunner to your project.");
             if (scenePaths.Length > 1)
                 throw new Exception($"Make sure you have only 1 {pluginDirectory}/{runnerScene} in your project.");
-            
-            context.Settings.TestRunner.NoIsolationNetFramework.SetValue(true);
 
-            if (context is ITestRunnerExecutionContext executionContext &&
-                executionContext.Run.HostController.HostId == WellKnownHostProvidersIds.DebugProviderId)
+            if (!solution.GetProtocolSolution().GetGodotFrontendBackendModel().IsNet6Plus.HasTrueValue())
             {
-                PrepareDebuggerServer(executionContext.Run).Wait();
-                startInfo.EnvironmentVariables.Add("GODOT_MONO_DEBUGGER_AGENT",
-                    $"--debugger-agent=transport=dt_socket,address=127.0.0.1:{myDebugPort},server=n,suspend=y");
+                context.Settings.TestRunner.NoIsolationNetFramework.SetValue(true);
+                if (context is ITestRunnerExecutionContext executionContext &&
+                    executionContext.Run.HostController.HostId == WellKnownHostProvidersIds.DebugProviderId)
+                {
+                    PrepareDebuggerServer(executionContext.Run).Wait();
+                    startInfo.EnvironmentVariables.Add("GODOT_MONO_DEBUGGER_AGENT",
+                        $"--debugger-agent=transport=dt_socket,address=127.0.0.1:{myDebugPort},server=n,suspend=y");
+                }
             }
-
+                
             var rawStartInfo = new JetProcessStartInfo(startInfo);
             var patcher = new GodotPatcher(solution, scenePaths.Single().MakeRelativeTo(solutionDirectory));
             var request = context.RuntimeEnvironment.ToJetProcessRuntimeRequest();
