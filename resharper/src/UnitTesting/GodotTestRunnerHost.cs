@@ -27,7 +27,7 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
         [NotNull] public new static readonly ITestRunnerHost Instance = new GodotTestRunnerHost();
         private int myDebugPort;
         private const string pluginDirectory = "RiderTestRunner";
-        private const string runnerScene = "NetCoreRunner.tscn";
+        private const string runnerScene = "Runner.tscn";
 
         public override IPreparedProcess StartProcess(ProcessStartInfo startInfo, ITestRunnerContext context)
         {
@@ -36,22 +36,20 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
             var scenePaths = solutionDirectory.GetChildDirectories(pluginDirectory,
                 PathSearchFlags.ExcludeFiles | PathSearchFlags.RecurseIntoSubdirectories).Select(a=>a.Combine(runnerScene)).Where(a => a.ExistsFile).ToArray();
             if (!scenePaths.Any())
-                throw new Exception("Please manually put folder with files from https://github.com/van800/godot-demo-projects/tree/net6/mono/dodge_the_creeps/RiderTestRunner to your project.");
+                throw new Exception("Please manually put folder with files from https://github.com/van800/godot-demo-projects/tree/nunit/mono/dodge_the_creeps/RiderTestRunner to your project.");
             if (scenePaths.Length > 1)
                 throw new Exception($"Make sure you have only 1 {pluginDirectory}/{runnerScene} in your project.");
+            
+            context.Settings.TestRunner.NoIsolationNetFramework.SetValue(true);
 
-            if (!solution.GetProtocolSolution().GetGodotFrontendBackendModel().IsNet6Plus.HasTrueValue())
+            if (context is ITestRunnerExecutionContext executionContext &&
+                executionContext.Run.HostController.HostId == WellKnownHostProvidersIds.DebugProviderId)
             {
-                context.Settings.TestRunner.NoIsolationNetFramework.SetValue(true);
-                if (context is ITestRunnerExecutionContext executionContext &&
-                    executionContext.Run.HostController.HostId == WellKnownHostProvidersIds.DebugProviderId)
-                {
-                    PrepareDebuggerServer(executionContext.Run).Wait();
-                    startInfo.EnvironmentVariables.Add("GODOT_MONO_DEBUGGER_AGENT",
-                        $"--debugger-agent=transport=dt_socket,address=127.0.0.1:{myDebugPort},server=n,suspend=y");
-                }
+                PrepareDebuggerServer(executionContext.Run).Wait();
+                startInfo.EnvironmentVariables.Add("GODOT_MONO_DEBUGGER_AGENT",
+                    $"--debugger-agent=transport=dt_socket,address=127.0.0.1:{myDebugPort},server=n,suspend=y");
             }
-                
+
             var rawStartInfo = new JetProcessStartInfo(startInfo);
             var patcher = new GodotPatcher(solution, scenePaths.Single().MakeRelativeTo(solutionDirectory));
             var request = context.RuntimeEnvironment.ToJetProcessRuntimeRequest();
@@ -136,16 +134,16 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
                 var fileName = startInfo.FileName;
                 var args = startInfo.Arguments;
 
-                var solutionDir = mySolution.SolutionDirectory.QuoteIfNeeded();
+                var solutionDir = mySolution.SolutionDirectory;
 
                 if (myModel == null)
                     throw new InvalidOperationException("Missing connection to frontend.");
                 if (!myModel.GodotPath.HasValue())
                     throw new InvalidOperationException("GodotPath is unknown.");
-                var godotPath = myModel.GodotPath.Value.QuoteIfNeeded();
+                var godotPath = myModel.GodotPath.Value;
                 
                 var patchedInfo = startInfo.Patch(godotPath,
-                    $"--path {solutionDir} \"res://{mySceneRelPath}\" --unit_test_assembly \"{fileName}\" --unit_test_args \"{args}\"",
+                    $"--path \"{solutionDir}\" \"res://{mySceneRelPath}\" --unit_test_assembly \"{fileName}\" --unit_test_args \"{args}\"",
                     EnvironmentVariableMutator.Empty);
 
                 return ProcessStartInfoPatchResult.CreateSuccess(startInfo, request, patchedInfo);
