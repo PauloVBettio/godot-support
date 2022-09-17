@@ -32,14 +32,14 @@ namespace JetBrains.ReSharper.Plugins.Godot.UnitTesting
             var fileName = startInfo.FileName;
             var args = startInfo.Arguments;
 
-            var solutionDir = solution.SolutionDirectory.QuoteIfNeeded();
+            var solutionDir = solution.SolutionDirectory;
             var model = solution.GetProtocolSolution().GetGodotFrontendBackendModel();
 
             if (model == null)
                 throw new InvalidOperationException("Missing connection to frontend.");
             if (!model.GodotPath.HasValue())
                 throw new InvalidOperationException("GodotPath is unknown.");
-            var godotPath = model.GodotPath.Value.QuoteIfNeeded();
+            var godotPath = model.GodotPath.Value;
 
             var sceneRelPath = scenePaths.Single().MakeRelativeTo(solutionDirectory);
             startInfo.FileName = godotPath;
